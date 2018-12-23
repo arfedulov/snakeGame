@@ -1,0 +1,24 @@
+{
+  "name": "snake-game",
+  "version": "0.1.0",
+  "description": "A very basic html5 game",
+  "private": true,
+  "main": "src/main.ts",
+  "scripts": {
+    "test": "npx jest",
+    "start": "npx webpack-dev-server"
+  },
+  "author": "Artem Fedulov",
+  "license": "ISC",
+  "devDependencies": {
+    "clean-webpack-plugin": "^1.0.0",
+    "jest": "^23.6.0",
+    "ts-jest": "^23.10.5",
+    "ts-loader": "^5.3.2",
+    "tslint": "^5.12.0",
+    "typescript": "^3.2.2",
+    "webpack": "^4.28.2",
+    "webpack-cli": "^3.1.2",
+    "webpack-dev-server": "^3.1.13"
+  }
+}
