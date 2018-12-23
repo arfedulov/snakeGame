@@ -27,6 +27,7 @@ const config = {
   },
   devServer: {
     contentBase: path.resolve(__dirname, 'dist'),
+    disableHostCheck: true,
     port: 9000,
     hot: true,
   },
