@@ -9,6 +9,7 @@ const PIXEL_SIZE = 20;
 const PIXEL_PADDING = 1;
 const BOARD_SIZE = 600;
 const DROWING_LATENCY = 150; // ms
+const APPROACH_LIMIT = 10; // how close to snake's head may a particle respawn (in Pixel units)
 
 type PixelCoord = 0 | 20 | 40 | 60 | 80 | 100 | 120 | 140
   | 160 | 180 | 200 | 220 | 240 | 260 | 280 | 300 | 320
@@ -26,12 +27,6 @@ const snake: Snake = [
   { x: 0, y: 0 },
   { x: 20, y: 0 },
   { x: 40, y: 0 },
-  { x: 40, y: 20 },
-  { x: 40, y: 40 },
-  { x: 40, y: 60 },
-  { x: 60, y: 60 },
-  { x: 80, y: 60 },
-  { x: 80, y: 80 },
 ];
 
 type ParticleOpacity = 0.25 | 0.5 | 0.75 | 1;
@@ -191,9 +186,27 @@ function increaseSnakeLength() {
 }
 
 function positionParticle() {
-  const { x, y } = getRandomPixelPosition();
-  particle.x = x;
-  particle.y = y;
+  let pixel = getRandomPixelPosition();
+
+  while (!particleIsFarEnoughFromSnake(pixel)) {
+    pixel = getRandomPixelPosition();
+  }
+  particle.x = pixel.x;
+  particle.y = pixel.y;
+}
+
+function particleIsFarEnoughFromSnake(pixel: Pixel): boolean {
+  const distance = Math.sqrt(((snake[0].x - pixel.x) ** 2) + ((snake[0].y - pixel.y) ** 2));
+  for (let i = 0, len = snake.length; i < len; i++) {
+    if (snake[i].x === pixel.x && snake[i].y === pixel.y) {
+      return false;
+    }
+    if (distance < PIXEL_SIZE * APPROACH_LIMIT) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 function getRandomPixelPosition(): Pixel {
@@ -202,3 +215,7 @@ function getRandomPixelPosition(): Pixel {
     y: (Math.floor((Math.random() * BOARD_SIZE / PIXEL_SIZE)) * PIXEL_SIZE) as PixelCoord,
   };
 }
+
+// TODO:
+//   * add restart button
+//   * add levels
