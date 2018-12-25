@@ -3,10 +3,12 @@ import contains from './utils/contains';
 document.addEventListener('DOMContentLoaded', main);
 document.addEventListener('keydown', handleKeyPress);
 
+const SNAKE_COLOR = 'rgb(100, 100, 110)';
+
 const PIXEL_SIZE = 20;
 const PIXEL_PADDING = 1;
 const BOARD_SIZE = 600;
-const DROWING_LATENCY = 250; // ms
+const DROWING_LATENCY = 150; // ms
 
 type PixelCoord = 0 | 20 | 40 | 60 | 80 | 100 | 120 | 140
   | 160 | 180 | 200 | 220 | 240 | 260 | 280 | 300 | 320
@@ -32,6 +34,11 @@ const snake: Snake = [
   { x: 80, y: 80 },
 ];
 
+type ParticleOpacity = 0.25 | 0.5 | 0.75 | 1;
+
+const particle: Pixel = { x: 0, y: 0 };
+let particleOpacity: ParticleOpacity = 0.25;
+
 let snakeDirection: Direction = 'DOWN';
 // used for preventing change direction faster than drowing happens
 let snakeDirectionBlocked: boolean = false;
@@ -41,12 +48,18 @@ function main() {
   const board: HTMLCanvasElement = document.getElementById('board') as HTMLCanvasElement;
   const ctx = board.getContext('2d');
 
+  positionParticle();
+
   const mainLoop = setInterval(() => {
+    ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
+    drowParticle(ctx);
     drowSnake(ctx);
     if (failingGameConditions()) {
       clearInterval(mainLoop);
       alert('Game Over');
     }
+    handleParticleCollide();
+
     moveSnake(snakeDirection);
   }, DROWING_LATENCY);
 }
@@ -131,8 +144,8 @@ function subPixel(value: PixelCoord): PixelCoord {
   return (value - PIXEL_SIZE) as PixelCoord;
 }
 
-function drowPixel(ctx: CanvasRenderingContext2D, x: PixelCoord, y: PixelCoord) {
-  ctx.fillStyle = 'gray';
+function drowPixel(ctx: CanvasRenderingContext2D, x: PixelCoord, y: PixelCoord, color: string) {
+  ctx.fillStyle = color;
   ctx.fillRect(x + PIXEL_PADDING / 2,
                y + PIXEL_PADDING / 2,
                PIXEL_SIZE - PIXEL_PADDING,
@@ -140,8 +153,52 @@ function drowPixel(ctx: CanvasRenderingContext2D, x: PixelCoord, y: PixelCoord) 
 }
 
 function drowSnake(ctx: CanvasRenderingContext2D) {
-  ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
   snake.forEach((px) => {
-    drowPixel(ctx, px.x, px.y);
+    drowPixel(ctx, px.x, px.y, SNAKE_COLOR);
   });
+}
+
+function drowParticle(ctx: CanvasRenderingContext2D) {
+  drowPixel(ctx, particle.x, particle.y, `rgba(100, 100, 110, ${particleOpacity})`);
+  particleOpacity = ((particleOpacity + 0.25) % 1) as ParticleOpacity;
+}
+
+function handleParticleCollide() {
+  if (snake[0].x === particle.x && snake[0].y === particle.y) {
+    increaseSnakeLength();
+    positionParticle();
+  }
+}
+
+function increaseSnakeLength() {
+  const tail = snake[snake.length - 1];
+  switch (snakeDirection) {
+    case 'UP':
+      snake.push({ x: tail.x, y: (tail.y + PIXEL_SIZE) as PixelCoord });
+      break;
+    case 'DOWN':
+      snake.push({ x: tail.x, y: (tail.y - PIXEL_SIZE) as PixelCoord });
+      break;
+    case 'LEFT':
+      snake.push({ x: (tail.x + PIXEL_SIZE) as PixelCoord, y: tail.y });
+      break;
+    case 'RIGHT':
+      snake.push({ x: (tail.x - PIXEL_SIZE) as PixelCoord, y: tail.y });
+      break;
+    default:
+      break;
+  }
+}
+
+function positionParticle() {
+  const { x, y } = getRandomPixelPosition();
+  particle.x = x;
+  particle.y = y;
+}
+
+function getRandomPixelPosition(): Pixel {
+  return {
+    x: (Math.floor((Math.random() * BOARD_SIZE / PIXEL_SIZE)) * PIXEL_SIZE) as PixelCoord,
+    y: (Math.floor((Math.random() * BOARD_SIZE / PIXEL_SIZE)) * PIXEL_SIZE) as PixelCoord,
+  };
 }
