@@ -12,6 +12,9 @@ const DROWING_LATENCY = 150; // ms
 const APPROACH_LIMIT = 10; // how close to snake's head may a particle respawn (in Pixel units)
 const BLINKING_RATE = 100;
 
+const LEVEL_TEXT_POSITION = { x: PIXEL_SIZE, y: PIXEL_SIZE * 2 };
+const LIVES_TEXT_POSITION = { x: BOARD_SIZE - PIXEL_SIZE, y: PIXEL_SIZE * 2 };
+
 type PixelCoord = 0 | 20 | 40 | 60 | 80 | 100 | 120 | 140
   | 160 | 180 | 200 | 220 | 240 | 260 | 280 | 300 | 320
   | 340 | 360 | 380 | 400 | 420 | 440 | 460 | 480 | 500
@@ -49,6 +52,22 @@ const speedUp = 0.25;
 
 let lives = 3;
 
+function drowText(ctx: CanvasRenderingContext2D) {
+  ctx.font = '18px "Press Start 2P", cursive';
+  ctx.fillStyle = 'rgba(50, 50, 50, .5)';
+  ctx.textAlign = 'start';
+  ctx.fillText(`Level: ${gameLevel}`, LEVEL_TEXT_POSITION.x, LEVEL_TEXT_POSITION.y);
+  ctx.textAlign = 'end';
+  ctx.fillText(`Lives: ${lives}`, LIVES_TEXT_POSITION.x, LIVES_TEXT_POSITION.y);
+}
+
+function drowFinalText(ctx: CanvasRenderingContext2D, text: string) {
+  ctx.font = '40px "Press Start 2P", cursive';
+  ctx.fillStyle = 'rgba(50, 50, 50, .5)';
+  ctx.textAlign = 'center';
+  ctx.fillText(text, BOARD_SIZE / 2, BOARD_SIZE / 2);
+}
+
 function computeTimeInterval(level: GameLevel, seed: number): number {
   return seed * (speedUp * gameLevel + 1);
 }
@@ -80,17 +99,19 @@ function main() {
 
   const mainLoop = setInterval(() => {
     ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
+    drowText(ctx);
     drowParticle(ctx);
     drowSnake(ctx);
     if (failingGameConditions()) {
       if (lives > 0) {
         lives--;
         snake = initialSnake.slice(0, initialSnake.length);
+        drowText(ctx);
       } else {
         clearInterval(mainLoop);
         clearInterval(particleBlinkingLoop);
-        alert('Game Over');
         ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
+        drowFinalText(ctx, 'Game Over :(');
       }
     }
     handleParticleCollide();
@@ -99,11 +120,12 @@ function main() {
       if (gameLevel === MAX_LEVEL) {
         clearInterval(mainLoop);
         clearInterval(particleBlinkingLoop);
-        alert('You win!');
         ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
+        drowFinalText(ctx, 'You win :)');
       }
       gameLevel++;
       snake = snake.slice(0, 3);
+      drowText(ctx);
     }
 
     moveSnake(snakeDirection);
@@ -272,4 +294,3 @@ function getRandomPixelPosition(): Pixel {
 
 // TODO:
 //   * add restart button
-//   * add levels
