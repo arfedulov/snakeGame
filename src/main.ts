@@ -48,8 +48,6 @@ type GameLevel = 0 | 1 | 2 | 3 | 4;
 const MAX_LEVEL = 4;
 let gameLevel: GameLevel = 0;
 
-const speedUp = 0.25;
-
 let lives = 3;
 
 function drowText(ctx: CanvasRenderingContext2D) {
@@ -69,7 +67,7 @@ function drowFinalText(ctx: CanvasRenderingContext2D, text: string) {
 }
 
 function computeTimeInterval(level: GameLevel, seed: number): number {
-  return seed * (speedUp * gameLevel + 1);
+  return seed * (1 - (0.1 * level));
 }
 
 const MAX_SNAKE_LENGTH_FOR_LEVEL = {
@@ -107,44 +105,61 @@ function main() {
   }
 }
 
-function game(ctx: CanvasRenderingContext2D) {
-  positionParticle();
+function drowGame(ctx: CanvasRenderingContext2D): boolean {
+  ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
+  drowText(ctx);
+  drowParticle(ctx);
+  drowSnake(ctx);
 
-  const particleBlinkingLoop = setInterval(particleBlink, BLINKING_RATE);
+  let continueRedrowing = true;
 
-  const mainLoop = setInterval(() => {
-    ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
-    drowText(ctx);
-    drowParticle(ctx);
-    drowSnake(ctx);
-    if (failingGameConditions()) {
-      if (lives > 0) {
-        lives--;
-        snake = initialSnake.slice(0, initialSnake.length);
-        drowText(ctx);
-      } else {
-        clearInterval(mainLoop);
-        clearInterval(particleBlinkingLoop);
-        ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
-        drowFinalText(ctx, 'Game Over :(');
-      }
+  if (failingGameConditions()) {
+    if (lives > 0) {
+      lives--;
+      snake = initialSnake.slice(0, initialSnake.length);
+    } else {
+      ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
+      drowFinalText(ctx, 'Game Over :(');
+      continueRedrowing = false;
     }
-    handleParticleCollide();
+  }
+  handleParticleCollide();
 
-    if (checkLevelWinningConditions()) {
-      if (gameLevel === MAX_LEVEL) {
-        clearInterval(mainLoop);
-        clearInterval(particleBlinkingLoop);
-        ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
-        drowFinalText(ctx, 'You win :)');
-      }
+  if (checkLevelWinningConditions()) {
+    if (gameLevel === MAX_LEVEL) {
+      ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
+      drowFinalText(ctx, 'You win :)');
+      continueRedrowing = false;
+    } else {
       gameLevel++;
       snake = snake.slice(0, 3);
-      drowText(ctx);
     }
+  }
 
-    moveSnake(snakeDirection);
-  }, computeTimeInterval(gameLevel, DROWING_LATENCY));
+  moveSnake(snakeDirection);
+
+  return continueRedrowing;
+}
+
+function game(ctx: CanvasRenderingContext2D) {
+  positionParticle();
+  const particleBlinkingLoop = setInterval(particleBlink, BLINKING_RATE);
+  let lastMainDrowTimestamp = performance.now();
+
+  const mainLoop = (currentTimestamp) => {
+    let continueRedrowing = true;
+    if (currentTimestamp - lastMainDrowTimestamp >= computeTimeInterval(gameLevel, DROWING_LATENCY)) {
+      continueRedrowing = drowGame(ctx);
+      lastMainDrowTimestamp = performance.now();
+    }
+    if (continueRedrowing) {
+      requestAnimationFrame(mainLoop);
+    } else {
+      clearInterval(particleBlinkingLoop);
+    }
+  };
+
+  requestAnimationFrame(mainLoop);
 }
 
 function failingGameConditions(): boolean {
