@@ -10,6 +10,7 @@ const PIXEL_PADDING = 1;
 const BOARD_SIZE = 600;
 const DROWING_LATENCY = 150; // ms
 const APPROACH_LIMIT = 10; // how close to snake's head may a particle respawn (in Pixel units)
+const BLINKING_RATE = 100;
 
 type PixelCoord = 0 | 20 | 40 | 60 | 80 | 100 | 120 | 140
   | 160 | 180 | 200 | 220 | 240 | 260 | 280 | 300 | 320
@@ -23,11 +24,13 @@ interface Pixel {
 
 type Snake = Pixel[];
 
-const snake: Snake = [
+const initialSnake: Snake = [
   { x: 0, y: 0 },
   { x: 20, y: 0 },
   { x: 40, y: 0 },
 ];
+
+let snake: Snake = initialSnake.slice(0, initialSnake.length);
 
 type ParticleOpacity = 0.25 | 0.5 | 0.75 | 1;
 
@@ -38,6 +41,34 @@ let snakeDirection: Direction = 'DOWN';
 // used for preventing change direction faster than drowing happens
 let snakeDirectionBlocked: boolean = false;
 
+type GameLevel = 0 | 1 | 2 | 3 | 4;
+const MAX_LEVEL = 4;
+let gameLevel: GameLevel = 0;
+
+const speedUp = 0.25;
+
+let lives = 3;
+
+function computeTimeInterval(level: GameLevel, seed: number): number {
+  return seed * (speedUp * gameLevel + 1);
+}
+
+const MAX_SNAKE_LENGTH_FOR_LEVEL = {
+  0: 6,
+  1: 8,
+  2: 10,
+  3: 15,
+  4: 20,
+};
+
+function checkLevelWinningConditions(): boolean {
+  if (snake.length > MAX_SNAKE_LENGTH_FOR_LEVEL[gameLevel]) {
+    return true;
+  }
+
+  return false;
+}
+
 function main() {
   // 30 x 30 Pixel board (1 pixel is 20 x 20 px)
   const board: HTMLCanvasElement = document.getElementById('board') as HTMLCanvasElement;
@@ -45,18 +76,38 @@ function main() {
 
   positionParticle();
 
+  const particleBlinkingLoop = setInterval(particleBlink, BLINKING_RATE);
+
   const mainLoop = setInterval(() => {
     ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
     drowParticle(ctx);
     drowSnake(ctx);
     if (failingGameConditions()) {
-      clearInterval(mainLoop);
-      alert('Game Over');
+      if (lives > 0) {
+        lives--;
+        snake = initialSnake.slice(0, initialSnake.length);
+      } else {
+        clearInterval(mainLoop);
+        clearInterval(particleBlinkingLoop);
+        alert('Game Over');
+        ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
+      }
     }
     handleParticleCollide();
 
+    if (checkLevelWinningConditions()) {
+      if (gameLevel === MAX_LEVEL) {
+        clearInterval(mainLoop);
+        clearInterval(particleBlinkingLoop);
+        alert('You win!');
+        ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
+      }
+      gameLevel++;
+      snake = snake.slice(0, 3);
+    }
+
     moveSnake(snakeDirection);
-  }, DROWING_LATENCY);
+  }, computeTimeInterval(gameLevel, DROWING_LATENCY));
 }
 
 function failingGameConditions(): boolean {
@@ -155,6 +206,9 @@ function drowSnake(ctx: CanvasRenderingContext2D) {
 
 function drowParticle(ctx: CanvasRenderingContext2D) {
   drowPixel(ctx, particle.x, particle.y, `rgba(100, 100, 110, ${particleOpacity})`);
+}
+
+function particleBlink() {
   particleOpacity = ((particleOpacity + 0.25) % 1) as ParticleOpacity;
 }
 
