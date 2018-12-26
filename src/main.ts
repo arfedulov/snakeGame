@@ -93,6 +93,21 @@ function main() {
   const board: HTMLCanvasElement = document.getElementById('board') as HTMLCanvasElement;
   const ctx = board.getContext('2d');
 
+  const restartButton = document.getElementById('restartBtn');
+  if (restartButton) {
+    restartButton.addEventListener('click', () => {
+      document.location.reload();
+    });
+  }
+  const startButton = document.getElementById('startBtn');
+  if (startButton) {
+    startButton.addEventListener('click', () => {
+      game(ctx);
+    });
+  }
+}
+
+function game(ctx: CanvasRenderingContext2D) {
   positionParticle();
 
   const particleBlinkingLoop = setInterval(particleBlink, BLINKING_RATE);
@@ -291,6 +306,3 @@ function getRandomPixelPosition(): Pixel {
     y: (Math.floor((Math.random() * BOARD_SIZE / PIXEL_SIZE)) * PIXEL_SIZE) as PixelCoord,
   };
 }
-
-// TODO:
-//   * add restart button

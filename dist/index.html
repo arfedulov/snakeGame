@@ -16,7 +16,7 @@
       margin: 0;
       padding: 0;
       display: flex;
-      justify-content: center;
+      justify-content: space-around;
       align-items: center;
     }
     #board {
@@ -24,11 +24,30 @@
       flex: 0 0 auto;
       box-sizing: content-box;
     }
+
+    button, button:focus {
+      background: none;
+      color: rgb(100, 110, 110);
+      font-family: "Press Start 2P", cursive;
+      width: 300px;
+      height: 80px;
+      border: 5px solid rgb(100, 110, 110);
+      font-size: 1.2em;
+      outline: none;
+    }
+
+    button:active {
+      outline: none;
+      border: 5px solid rgb(50, 50, 50);
+      color: rgb(50, 50, 50);
+    }
   </style>
   <link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
 </head>
 <body>
+  <button type="button" id="startBtn">Start Palying</button>
   <canvas id="board" width="600" height="600"></canvas>
+  <button type="button" id="restartBtn">Restart</button>
   <script src="main.bundle.js"></script>
 </body>
 </html>
