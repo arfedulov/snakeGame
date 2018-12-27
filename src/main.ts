@@ -24,6 +24,10 @@ const LEVEL_TEXT_POSITION = { x: PIXEL_SIZE, y: PIXEL_SIZE * 2 };
 /** Coordinates for the text that displays player's lives left. */
 const LIVES_TEXT_POSITION = { x: BOARD_SIZE - PIXEL_SIZE, y: PIXEL_SIZE * 2 };
 
+const START_GAME_LEVEL: GameLevel = 0;
+
+const INITIAL_LIVES = 3;
+
 /** Represents x or y coordinate of a Pixel on the board. */
 type PixelCoord = 0 | 20 | 40 | 60 | 80 | 100 | 120 | 140
   | 160 | 180 | 200 | 220 | 240 | 260 | 280 | 300 | 320
@@ -40,13 +44,15 @@ type Snake = Pixel[];
 
 /** Game and round initialized with this snake. */
 const initialSnake: Snake = [
-  { x: 0, y: 0 },
-  { x: 20, y: 0 },
-  { x: 40, y: 0 },
+  { x: 300, y: 300 },
+  { x: 300, y: 320 },
+  { x: 300, y: 340 },
 ];
 
-/** Current snake's state. */
-let snake: Snake = initialSnake.slice(0, initialSnake.length);
+type GameLevel = 0 | 1 | 2 | 3 | 4;
+
+/** Maximum value for game level. */
+const MAX_LEVEL: GameLevel = 4;
 
 /** The particle on which a player is aiming. */
 const particle: Pixel = { x: 0, y: 0 };
@@ -56,21 +62,28 @@ type ParticleOpacity = 0.25 | 0.5 | 0.75 | 1;
 /** Particle's current opacity value (used for blinking). */
 let particleOpacity: ParticleOpacity = 0.25;
 
+/** Current snake's state. */
+let snake: Snake = initialSnake.slice(0, initialSnake.length);
+
 /** Current snake's direction. */
-let snakeDirection: Direction = 'DOWN';
+let snakeDirection: Direction = 'UP';
 
 // used for preventing change direction faster than drawing happens
 let snakeDirectionBlocked: boolean = false;
 
-type GameLevel = 0 | 1 | 2 | 3 | 4;
-
-/** Maximum value for game level. */
-const MAX_LEVEL = 4;
-
-let gameLevel: GameLevel = 0;
+let gameLevel: GameLevel = START_GAME_LEVEL;
 
 /** Player's lives. */
-let lives = 3;
+let lives = INITIAL_LIVES;
+
+/** Set changing globals to its initial state. */
+function resetInitialGlobals() {
+  gameLevel = START_GAME_LEVEL;
+  lives = INITIAL_LIVES;
+  snake = initialSnake.slice(0, initialSnake.length);
+  snakeDirection = 'UP';
+  positionParticle();
+}
 
 /** Draw game's state values on the board (during the whole game). */
 function drawText(ctx: CanvasRenderingContext2D) {
@@ -121,12 +134,16 @@ function main() {
   const restartButton = document.getElementById('restartBtn');
   if (restartButton) {
     restartButton.addEventListener('click', () => {
-      document.location.reload();
+      resetInitialGlobals();
     });
   }
   const startButton = document.getElementById('startBtn');
   if (startButton) {
     startButton.addEventListener('click', () => {
+      if (restartButton) {
+        restartButton.style.display = 'block';
+      }
+      startButton.style.display = 'none';
       playGame(ctx);
     });
   }
@@ -171,6 +188,8 @@ function drawGame(ctx: CanvasRenderingContext2D): boolean {
 }
 
 function playGame(ctx: CanvasRenderingContext2D) {
+  ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
+
   positionParticle();
   const particleBlinkingLoop = setInterval(particleBlink, BLINKING_LATENCY);
 

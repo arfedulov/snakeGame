@@ -15,14 +15,16 @@
       height: 100vh;
       margin: 0;
       padding: 0;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
+      position: relative;
     }
     #board {
       border: 5px solid black;
-      flex: 0 0 auto;
       box-sizing: content-box;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 0;
     }
 
     button, button:focus {
@@ -40,6 +42,23 @@
       outline: none;
       border: 5px solid rgb(50, 50, 50);
       color: rgb(50, 50, 50);
+    }
+
+    #startBtn {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+    }
+
+    #restartBtn {
+      position: relative;
+      left: 100%;
+      top: 50%;
+      transform: translate(calc(-100% - 25px), -50%);
+      z-index: 1;
+      display: none;
     }
   </style>
   <link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
