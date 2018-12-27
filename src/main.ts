@@ -97,11 +97,11 @@ function computeDrawingLatency(level: GameLevel, baseLatency: number): number {
 
 /** Define maximum snake's length for each game level. */
 const MAX_SNAKE_LENGTH_FOR_LEVEL = {
-  0: 6,
-  1: 8,
+  0: 12,
+  1: 10,
   2: 10,
-  3: 15,
-  4: 20,
+  3: 12,
+  4: 14,
 };
 
 /** Check if the game's state mean that the player win at current game level. */
