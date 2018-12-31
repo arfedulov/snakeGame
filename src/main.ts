@@ -16,6 +16,9 @@ const BOARD_SIZE = 600;
 /** Base redrawing latency for the game (in milliseconds). */
 const DRAWING_LATENCY = 150;
 
+/** Game timer drowing frequency (in milliseconds). */
+const DRAW_TIME_DELAY = 5;
+
 /** How close to snake's head may a particle respawn (in Pixel units). */
 const APPROACH_LIMIT = 10;
 
@@ -112,7 +115,7 @@ function drawTimeText(ctx: CanvasRenderingContext2D) {
     seconds,
     milliseconds,
   } = getTimeElements(timeElapsed);
-  ctx.fillText(`Time: ${minutes}:${seconds}:${milliseconds}`,
+  ctx.fillText(`Time: ${formatNumber(minutes, 2)}:${formatNumber(seconds, 2)}:${formatNumber(milliseconds, 3)}`,
                 TIME_TEXT_POSITION.x,
                 TIME_TEXT_POSITION.y);
 }
@@ -191,7 +194,7 @@ function drawGame(ctx: CanvasRenderingContext2D): boolean {
   let continueRedrawing = true;
 
   if (checkFailingConditions()) {
-    if (lives > 0) {
+    if (lives > 1) {
       lives--;
       snake = initialSnake.slice(0, initialSnake.length);
     } else {
@@ -222,25 +225,17 @@ function drawGame(ctx: CanvasRenderingContext2D): boolean {
   return continueRedrawing;
 }
 
-function playGame(ctx: CanvasRenderingContext2D) {
+function playGame(ctx: CanvasRenderingContext2D, onEnd?: () => void) {
   const startGameTime = performance.now();
   ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
 
   positionParticle();
   const particleBlinkingLoop = setInterval(particleBlink, BLINKING_LATENCY);
 
-  let lastTimeDrawTimestamp = performance.now();
-  const timeDrawingLoop = (currentTimestamp) => {
-    timeElapsed = currentTimestamp - startGameTime;
-    if (currentTimestamp - lastTimeDrawTimestamp >= 5) {
-      drawTimeText(ctx);
-      lastTimeDrawTimestamp = currentTimestamp;
-    }
-  };
-
   let lastMainDrawTimestamp = performance.now();
+  let continueRedrawing = true;
+
   const mainLoop = (currentTimestamp) => {
-    let continueRedrawing = true;
     if (currentTimestamp - lastMainDrawTimestamp
       >= computeDrawingLatency(gameLevel, DRAWING_LATENCY)) {
       continueRedrawing = drawGame(ctx);
@@ -249,9 +244,20 @@ function playGame(ctx: CanvasRenderingContext2D) {
 
     if (continueRedrawing) {
       requestAnimationFrame(mainLoop);
-      requestAnimationFrame(timeDrawingLoop);
     } else {
       clearInterval(particleBlinkingLoop);
+    }
+  };
+
+  let lastTimeDrawTimestamp = performance.now();
+  const timeDrawingLoop = (currentTimestamp) => {
+    timeElapsed = currentTimestamp - startGameTime;
+    if (currentTimestamp - lastTimeDrawTimestamp >= DRAW_TIME_DELAY) {
+      drawTimeText(ctx);
+      lastTimeDrawTimestamp = currentTimestamp;
+    }
+    if (continueRedrawing) {
+      requestAnimationFrame(timeDrawingLoop);
     }
   };
 
