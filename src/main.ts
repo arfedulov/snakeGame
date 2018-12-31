@@ -1,3 +1,6 @@
+import GameStorage, {
+  GameResult,
+} from './GameStorage';
 import contains from './utils/contains';
 import formatNumber from './utils/formatNumber';
 
@@ -104,12 +107,22 @@ function drawText(ctx: CanvasRenderingContext2D) {
 
 function drawTimeText(ctx: CanvasRenderingContext2D) {
   ctx.textAlign = 'end';
-  const minutes = formatNumber(Math.floor(timeElapsed / 1000 / 60), 2);
-  const seconds = formatNumber(Math.floor(timeElapsed / 1000) % 60, 2);
-  const milliseconds = formatNumber(Math.floor(timeElapsed) % 1000, 3);
+  const {
+    minutes,
+    seconds,
+    milliseconds,
+  } = getTimeElements(timeElapsed);
   ctx.fillText(`Time: ${minutes}:${seconds}:${milliseconds}`,
                 TIME_TEXT_POSITION.x,
                 TIME_TEXT_POSITION.y);
+}
+
+function getTimeElements(timestamp: number): GameResult {
+  return {
+    minutes: Math.floor(timestamp / 1000 / 60),
+    seconds: Math.floor(timestamp / 1000) % 60,
+    milliseconds: Math.floor(timestamp) % 1000,
+  };
 }
 
 /** Draw some important text message in the midddle of board. */
@@ -142,6 +155,8 @@ function checkLevelWinningConditions(): boolean {
 
   return false;
 }
+
+const gameStorage = new GameStorage();
 
 function main() {
   // 30 x 30 Pixel board (1 pixel is 20 x 20 px)
@@ -193,6 +208,9 @@ function drawGame(ctx: CanvasRenderingContext2D): boolean {
       ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
       drawFinalText(ctx, 'You win :)');
       continueRedrawing = false;
+
+      // save result in local storage
+      gameStorage.saveResult(getTimeElements(timeElapsed));
     } else {
       gameLevel++;
       snake = snake.slice(0, 3);
