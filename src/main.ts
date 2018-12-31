@@ -1,4 +1,5 @@
 import contains from './utils/contains';
+import formatNumber from './utils/formatNumber';
 
 document.addEventListener('DOMContentLoaded', main);
 document.addEventListener('keydown', handleKeyPress);
@@ -23,6 +24,9 @@ const LEVEL_TEXT_POSITION = { x: PIXEL_SIZE, y: PIXEL_SIZE * 2 };
 
 /** Coordinates for the text that displays player's lives left. */
 const LIVES_TEXT_POSITION = { x: BOARD_SIZE - PIXEL_SIZE, y: PIXEL_SIZE * 2 };
+
+/** Coordinates for the text that displays time elapsed from game start. */
+const TIME_TEXT_POSITION = { x: BOARD_SIZE - PIXEL_SIZE, y: BOARD_SIZE - PIXEL_SIZE };
 
 const START_GAME_LEVEL: GameLevel = 0;
 
@@ -76,6 +80,9 @@ let gameLevel: GameLevel = START_GAME_LEVEL;
 /** Player's lives. */
 let lives = INITIAL_LIVES;
 
+/** Game duration. */
+let timeElapsed = 0;
+
 /** Set changing globals to its initial state. */
 function resetInitialGlobals() {
   gameLevel = START_GAME_LEVEL;
@@ -93,6 +100,16 @@ function drawText(ctx: CanvasRenderingContext2D) {
   ctx.fillText(`Level: ${gameLevel}`, LEVEL_TEXT_POSITION.x, LEVEL_TEXT_POSITION.y);
   ctx.textAlign = 'end';
   ctx.fillText(`Lives: ${lives}`, LIVES_TEXT_POSITION.x, LIVES_TEXT_POSITION.y);
+}
+
+function drawTimeText(ctx: CanvasRenderingContext2D) {
+  ctx.textAlign = 'end';
+  const minutes = formatNumber(Math.floor(timeElapsed / 1000 / 60), 2);
+  const seconds = formatNumber(Math.floor(timeElapsed / 1000) % 60, 2);
+  const milliseconds = formatNumber(Math.floor(timeElapsed) % 1000, 3);
+  ctx.fillText(`Time: ${minutes}:${seconds}:${milliseconds}`,
+                TIME_TEXT_POSITION.x,
+                TIME_TEXT_POSITION.y);
 }
 
 /** Draw some important text message in the midddle of board. */
@@ -188,26 +205,40 @@ function drawGame(ctx: CanvasRenderingContext2D): boolean {
 }
 
 function playGame(ctx: CanvasRenderingContext2D) {
+  const startGameTime = performance.now();
   ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
 
   positionParticle();
   const particleBlinkingLoop = setInterval(particleBlink, BLINKING_LATENCY);
 
+  let lastTimeDrawTimestamp = performance.now();
+  const timeDrawingLoop = (currentTimestamp) => {
+    timeElapsed = currentTimestamp - startGameTime;
+    if (currentTimestamp - lastTimeDrawTimestamp >= 5) {
+      drawTimeText(ctx);
+      lastTimeDrawTimestamp = currentTimestamp;
+    }
+  };
+
   let lastMainDrawTimestamp = performance.now();
   const mainLoop = (currentTimestamp) => {
     let continueRedrawing = true;
-    if (currentTimestamp - lastMainDrawTimestamp >= computeDrawingLatency(gameLevel, DRAWING_LATENCY)) {
+    if (currentTimestamp - lastMainDrawTimestamp
+      >= computeDrawingLatency(gameLevel, DRAWING_LATENCY)) {
       continueRedrawing = drawGame(ctx);
-      lastMainDrawTimestamp = performance.now();
+      lastMainDrawTimestamp = currentTimestamp;
     }
+
     if (continueRedrawing) {
       requestAnimationFrame(mainLoop);
+      requestAnimationFrame(timeDrawingLoop);
     } else {
       clearInterval(particleBlinkingLoop);
     }
   };
 
   requestAnimationFrame(mainLoop);
+  requestAnimationFrame(timeDrawingLoop);
 }
 
 /** Return true if current game's state means that the player failed the roud. */
