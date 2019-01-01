@@ -172,7 +172,7 @@ function main() {
       resetInitialGlobals();
     });
   }
-  const startButton = document.getElementById('startBtn');
+  const startButton = document.getElementById('playBtn');
   if (startButton) {
     startButton.addEventListener('click', () => {
       if (restartButton) {

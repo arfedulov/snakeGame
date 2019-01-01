@@ -9,14 +9,37 @@
     html {
       margin: 0;
       padding: 0;
+      font-family: "Press Start 2P", cursive;
+      --colorBase: rgb(100, 110, 100);
+      --colorActive: rgb(50, 50, 50);
+      --elBorder: 5px solid var(--colorBase);
+      --elBorderActive: 5px solid var(--colorActive);
     }
+
     body {
       width: 100%;
       height: 100vh;
+      max-height: 100vh;
       margin: 0;
       padding: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
       position: relative;
+      top: 0;
+      left: 0;
     }
+
+    nav {
+      height: 80px;
+    }
+
+    main {
+      position: relative;
+      height: calc(100% - 80px);
+    }
+
     #board {
       border: 5px solid black;
       box-sizing: content-box;
@@ -27,24 +50,27 @@
       z-index: 0;
     }
 
+    .control {
+      color: var(--colorBase);
+      border: var(--elBorder);
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .control:active {
+      border: var(--elBorderActive);
+      color: var(--colorActive);
+    }
+
     button, button:focus {
       background: none;
-      color: rgb(100, 110, 110);
-      font-family: "Press Start 2P", cursive;
-      width: 300px;
-      height: 80px;
-      border: 5px solid rgb(100, 110, 110);
       font-size: 1.2em;
       outline: none;
     }
 
-    button:active {
-      outline: none;
-      border: 5px solid rgb(50, 50, 50);
-      color: rgb(50, 50, 50);
-    }
-
-    #startBtn {
+    #playBtn {
+      width: 300px;
+      height: 80px;
       position: absolute;
       left: 50%;
       top: 50%;
@@ -52,21 +78,39 @@
       z-index: 1;
     }
 
-    #restartBtn {
-      position: relative;
-      left: 100%;
-      top: 50%;
-      transform: translate(calc(-100% - 25px), -50%);
-      z-index: 1;
-      display: none;
+    ul {
+      list-style-type: none;
+      padding: 0;
+      display: flex;
+      max-width: 1000px;
+      margin: 0 auto;
+      justify-content: center;
+    }
+
+    li {
+      margin: 10px;
+      padding: 5px 10px;
+      height: 40px;
+      font-size: 1.2em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
   </style>
   <link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
 </head>
 <body>
-  <button type="button" id="startBtn">Start Palying</button>
-  <canvas id="board" width="600" height="600"></canvas>
-  <button type="button" id="restartBtn">Restart</button>
+  <nav>
+    <ul>
+      <li class="control">Start New Game</li>
+      <li class="control">Statistics</li>
+      <li class="control">Options</li>
+    </ul>
+  </nav>
+  <main>
+      <button class="control" type="button" id="playBtn">Play</button>
+      <canvas id="board" width="600" height="600"></canvas>
+  </main>
   <script src="main.bundle.js"></script>
 </body>
 </html>
