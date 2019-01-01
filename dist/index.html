@@ -14,6 +14,7 @@
       --colorActive: rgb(50, 50, 50);
       --elBorder: 5px solid var(--colorBase);
       --elBorderActive: 5px solid var(--colorActive);
+      --displaySize: 600px;
     }
 
     body {
@@ -40,7 +41,9 @@
       height: calc(100% - 80px);
     }
 
-    #board {
+    .display {
+      width: var(--displaySize);
+      height: var(--displaySize);
       border: 5px solid black;
       box-sizing: content-box;
       position: absolute;
@@ -78,7 +81,7 @@
       z-index: 1;
     }
 
-    ul {
+    nav ul {
       list-style-type: none;
       padding: 0;
       display: flex;
@@ -87,7 +90,7 @@
       justify-content: center;
     }
 
-    li {
+    nav li {
       margin: 10px;
       padding: 5px 10px;
       height: 40px;
@@ -96,20 +99,32 @@
       align-items: center;
       justify-content: center;
     }
+
+    .stats {
+      list-style-type: none;
+      padding: 5px;
+      text-align: center;
+    }
+
+    .stats li {
+      margin: 5px 0;
+    }
   </style>
   <link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
 </head>
 <body>
   <nav>
     <ul>
-      <li class="control">Start New Game</li>
-      <li class="control">Statistics</li>
-      <li class="control">Options</li>
+      <li class="control" id="startNewGameBtn">Start New Game</li>
+      <li class="control" id="statsBtn">Statistics</li>
+      <li class="control" id="optionsBtn">Options</li>
     </ul>
   </nav>
   <main>
-      <button class="control" type="button" id="playBtn">Play</button>
-      <canvas id="board" width="600" height="600"></canvas>
+      <button class="control displayContent gameBoard" type="button" id="playBtn">Play</button>
+      <canvas id="board" class="display displayContent gameBoard" width="600" height="600"></canvas>
+      <ul class="display displayContent stats" id="statsDisplay" hidden></ul>
+      <div class="display displayContent options" id="optionsDisplay" hidden>options</div>
   </main>
   <script src="main.bundle.js"></script>
 </body>

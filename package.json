@@ -1,6 +1,6 @@
 {
   "name": "snake-game",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A very basic html5 game",
   "private": true,
   "main": "src/main.ts",

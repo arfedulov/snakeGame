@@ -2,6 +2,7 @@ import GameStorage, {
   GameResult,
 } from './GameStorage';
 import contains from './utils/contains';
+import domLib from './utils/domLib';
 import formatNumber from './utils/formatNumber';
 
 document.addEventListener('DOMContentLoaded', main);
@@ -161,24 +162,64 @@ function checkLevelWinningConditions(): boolean {
 
 const gameStorage = new GameStorage();
 
+type DisplayClass = 'gameBoard' | 'stats' | 'options';
+
+function switchOnDisplay(displayClass: DisplayClass) {
+  const allDisplays = document.querySelectorAll('.displayContent');
+  allDisplays.forEach((disp) => {
+    disp.setAttribute('hidden', '');
+  });
+  const activeDisplays = document.querySelectorAll(`.displayContent.${displayClass}`);
+  activeDisplays.forEach((actDisp) => {
+    actDisp.removeAttribute('hidden');
+  });
+}
+
 function main() {
   // 30 x 30 Pixel board (1 pixel is 20 x 20 px)
   const board: HTMLCanvasElement = document.getElementById('board') as HTMLCanvasElement;
   const ctx = board.getContext('2d');
 
-  const restartButton = document.getElementById('restartBtn');
-  if (restartButton) {
-    restartButton.addEventListener('click', () => {
-      resetInitialGlobals();
+  const statisticsDisplay = document.getElementById('statsDisplay');
+  if (statisticsDisplay) {
+    const statsData = gameStorage.getResults(10);
+    const stringifyedData = statsData.map((record) => {
+      const minutes = formatNumber(record.result.minutes, 2);
+      const seconds = formatNumber(record.result.seconds, 2);
+      const milliseconds = formatNumber(record.result.milliseconds, 3);
+      const date = new Date(record.date);
+
+      return ([
+        `${date.getFullYear()}/${date.getMonth()}/${date.getDate()} `,
+        `${date.getHours()}:${date.getMinutes()}`,
+        ` - ${minutes}:${seconds}:${milliseconds}`,
+      ]).join('');
+    });
+    domLib.insertElements(statisticsDisplay, stringifyedData, 'li');
+  }
+
+  const startNewGameButton = document.getElementById('startNewGameBtn');
+  if (startNewGameButton) {
+    startNewGameButton.addEventListener('click', () => {
+      location.reload();
+    });
+  }
+  const statisticsButton = document.getElementById('statsBtn');
+  if (statisticsButton) {
+    statisticsButton.addEventListener('click', () => {
+      switchOnDisplay('stats');
+    });
+  }
+  const optionsButton = document.getElementById('optionsBtn');
+  if (optionsButton) {
+    optionsButton.addEventListener('click', () => {
+      switchOnDisplay('options');
     });
   }
   const startButton = document.getElementById('playBtn');
   if (startButton) {
     startButton.addEventListener('click', () => {
-      if (restartButton) {
-        restartButton.style.display = 'block';
-      }
-      startButton.style.display = 'none';
+      startButton.setAttribute('hidden', '');
       playGame(ctx);
     });
   }

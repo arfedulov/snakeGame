@@ -31,8 +31,8 @@ class GameStorage {
     localStorage.setItem(GAME_RESULTS_STORAGE_ID, data);
   }
 
-  public getResults(): GameResultRecord[] {
-    return this.data;
+  public getResults(limit?: number): GameResultRecord[] {
+    return this.data.slice(0, limit ? limit : this.data.length - 1);
   }
 }
 
