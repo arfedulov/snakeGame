@@ -188,7 +188,7 @@ function main() {
   if (statisticsDisplay) {
     const statsData = gameStorage.getResults(10);
     const stringifyedData = statsData.map((record) => {
-      return formatDateTime(record.date);
+      return `${formatDateTime(record.date)} - ${formatNumber(record.result.minutes, 2)}:${formatNumber(record.result.seconds, 2)}:${formatNumber(record.result.milliseconds, 3)}`;
     });
     domLib.insertElements(statisticsDisplay, stringifyedData, 'li');
   }
