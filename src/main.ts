@@ -220,7 +220,7 @@ function main() {
   }
 }
 
-type GameStatus = 'running' | 'fail' | 'win';
+type GameStatus = 'running' | 'fail' | 'win' | 'levelUp';
 
 /** Draw all the game's parts, do game condition checks. Return `true` if game is continuing after current draw. */
 function drawGame(snakeCtx: CanvasRenderingContext2D): GameStatus {
@@ -252,6 +252,7 @@ function drawGame(snakeCtx: CanvasRenderingContext2D): GameStatus {
     } else {
       gameLevel++;
       snake = snake.slice(0, 3);
+      gameStatus = 'levelUp';
     }
   }
 
@@ -280,7 +281,7 @@ function playGame(snakeCtx: CanvasRenderingContext2D,
       lastSnakeDrawTimestamp = currentTimestamp;
     }
 
-    if (gameStatus === 'running') {
+    if (gameStatus === 'running' || gameStatus === 'levelUp') {
       requestAnimationFrame(snakeDrawingLoop);
     } else {
       clearInterval(particleBlinkingLoop);
@@ -288,6 +289,8 @@ function playGame(snakeCtx: CanvasRenderingContext2D,
   };
 
   let lastTimeDrawTimestamp = performance.now();
+  let lastTimeShowLevelUpMessage = performance.now();
+  let showLevelUpMessage = false;
   const textDrawingLoop = (currentTimestamp) => {
     timeElapsed = currentTimestamp - startGameTime;
     if (currentTimestamp - lastTimeDrawTimestamp >= DRAW_TIME_DELAY) {
@@ -296,7 +299,18 @@ function playGame(snakeCtx: CanvasRenderingContext2D,
       drawTimeText(textCtx);
       lastTimeDrawTimestamp = currentTimestamp;
     }
+    if (currentTimestamp - lastTimeShowLevelUpMessage > 500) {
+      showLevelUpMessage = false;
+    }
+    if (showLevelUpMessage) {
+      drawFinalText(textCtx, 'Next Level');
+    }
     switch (gameStatus) {
+      case 'levelUp':
+        showLevelUpMessage = true;
+        lastTimeShowLevelUpMessage = currentTimestamp;
+        requestAnimationFrame(textDrawingLoop);
+        break;
       case 'running':
         requestAnimationFrame(textDrawingLoop);
         break;
