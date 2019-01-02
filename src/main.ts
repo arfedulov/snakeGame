@@ -3,6 +3,7 @@ import GameStorage, {
 } from './GameStorage';
 import contains from './utils/contains';
 import domLib from './utils/domLib';
+import formatDateTime from './utils/formatDateTime';
 import formatNumber from './utils/formatNumber';
 
 document.addEventListener('DOMContentLoaded', main);
@@ -184,16 +185,7 @@ function main() {
   if (statisticsDisplay) {
     const statsData = gameStorage.getResults(10);
     const stringifyedData = statsData.map((record) => {
-      const minutes = formatNumber(record.result.minutes, 2);
-      const seconds = formatNumber(record.result.seconds, 2);
-      const milliseconds = formatNumber(record.result.milliseconds, 3);
-      const date = new Date(record.date);
-
-      return ([
-        `${date.getFullYear()}/${date.getMonth()}/${date.getDate()} `,
-        `${date.getHours()}:${date.getMinutes()}`,
-        ` - ${minutes}:${seconds}:${milliseconds}`,
-      ]).join('');
+      return formatDateTime(record.date);
     });
     domLib.insertElements(statisticsDisplay, stringifyedData, 'li');
   }
