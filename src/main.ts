@@ -178,8 +178,11 @@ function switchOnDisplay(displayClass: DisplayClass) {
 
 function main() {
   // 30 x 30 Pixel board (1 pixel is 20 x 20 px)
-  const board: HTMLCanvasElement = document.getElementById('board') as HTMLCanvasElement;
-  const ctx = board.getContext('2d');
+  const boardSnake: HTMLCanvasElement = document.getElementById('boardSnake') as HTMLCanvasElement;
+  const snakeCtx = boardSnake.getContext('2d');
+
+  const boardText: HTMLCanvasElement = document.getElementById('boardText') as HTMLCanvasElement;
+  const textCtx = boardText.getContext('2d');
 
   const statisticsDisplay = document.getElementById('statsDisplay');
   if (statisticsDisplay) {
@@ -212,28 +215,28 @@ function main() {
   if (startButton) {
     startButton.addEventListener('click', () => {
       startButton.setAttribute('hidden', '');
-      playGame(ctx);
+      playGame(snakeCtx, textCtx);
     });
   }
 }
 
-/** Draw all the game's parts, do game condition checks. Return `true` if game is continuing after current draw. */
-function drawGame(ctx: CanvasRenderingContext2D): boolean {
-  ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
-  drawText(ctx);
-  drawParticle(ctx);
-  drawSnake(ctx);
+type GameStatus = 'running' | 'fail' | 'win';
 
-  let continueRedrawing = true;
+/** Draw all the game's parts, do game condition checks. Return `true` if game is continuing after current draw. */
+function drawGame(snakeCtx: CanvasRenderingContext2D): GameStatus {
+  snakeCtx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
+  drawParticle(snakeCtx);
+  drawSnake(snakeCtx);
+
+  let gameStatus: GameStatus = 'running';
 
   if (checkFailingConditions()) {
     if (lives > 1) {
       lives--;
       snake = initialSnake.slice(0, initialSnake.length);
     } else {
-      ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
-      drawFinalText(ctx, 'Game Over :(');
-      continueRedrawing = false;
+      snakeCtx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
+      gameStatus = 'fail';
     }
   }
 
@@ -241,9 +244,8 @@ function drawGame(ctx: CanvasRenderingContext2D): boolean {
 
   if (checkLevelWinningConditions()) {
     if (gameLevel === MAX_LEVEL) {
-      ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
-      drawFinalText(ctx, 'You win :)');
-      continueRedrawing = false;
+      snakeCtx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
+      gameStatus = 'win';
 
       // save result in local storage
       gameStorage.saveResult(getTimeElements(timeElapsed));
@@ -255,47 +257,64 @@ function drawGame(ctx: CanvasRenderingContext2D): boolean {
 
   moveSnake(snakeDirection);
 
-  return continueRedrawing;
+  return gameStatus;
 }
 
-function playGame(ctx: CanvasRenderingContext2D, onEnd?: () => void) {
+function playGame(snakeCtx: CanvasRenderingContext2D,
+                  textCtx: CanvasRenderingContext2D,
+                  onEnd?: () => void) {
   const startGameTime = performance.now();
-  ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
+  snakeCtx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
+  textCtx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
 
   positionParticle();
   const particleBlinkingLoop = setInterval(particleBlink, BLINKING_LATENCY);
 
-  let lastMainDrawTimestamp = performance.now();
-  let continueRedrawing = true;
+  let lastSnakeDrawTimestamp = performance.now();
+  let gameStatus: GameStatus = 'running';
 
-  const mainLoop = (currentTimestamp) => {
-    if (currentTimestamp - lastMainDrawTimestamp
+  const snakeDrawingLoop = (currentTimestamp) => {
+    if (currentTimestamp - lastSnakeDrawTimestamp
       >= computeDrawingLatency(gameLevel, DRAWING_LATENCY)) {
-      continueRedrawing = drawGame(ctx);
-      lastMainDrawTimestamp = currentTimestamp;
+      gameStatus = drawGame(snakeCtx);
+      lastSnakeDrawTimestamp = currentTimestamp;
     }
 
-    if (continueRedrawing) {
-      requestAnimationFrame(mainLoop);
+    if (gameStatus === 'running') {
+      requestAnimationFrame(snakeDrawingLoop);
     } else {
       clearInterval(particleBlinkingLoop);
     }
   };
 
   let lastTimeDrawTimestamp = performance.now();
-  const timeDrawingLoop = (currentTimestamp) => {
+  const textDrawingLoop = (currentTimestamp) => {
     timeElapsed = currentTimestamp - startGameTime;
     if (currentTimestamp - lastTimeDrawTimestamp >= DRAW_TIME_DELAY) {
-      drawTimeText(ctx);
+      textCtx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
+      drawText(textCtx);
+      drawTimeText(textCtx);
       lastTimeDrawTimestamp = currentTimestamp;
     }
-    if (continueRedrawing) {
-      requestAnimationFrame(timeDrawingLoop);
+    switch (gameStatus) {
+      case 'running':
+        requestAnimationFrame(textDrawingLoop);
+        break;
+      case 'fail':
+        textCtx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
+        drawFinalText(textCtx, 'Game Over :(');
+        break;
+      case 'win':
+        textCtx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
+        drawFinalText(textCtx, 'You Win :)');
+        break;
+      default:
+        break;
     }
   };
 
-  requestAnimationFrame(mainLoop);
-  requestAnimationFrame(timeDrawingLoop);
+  requestAnimationFrame(snakeDrawingLoop);
+  requestAnimationFrame(textDrawingLoop);
 }
 
 /** Return true if current game's state means that the player failed the roud. */
