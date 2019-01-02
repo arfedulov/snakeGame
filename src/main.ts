@@ -163,7 +163,7 @@ function checkLevelWinningConditions(): boolean {
 
 const gameStorage = new GameStorage();
 
-type DisplayClass = 'gameBoard' | 'stats' | 'options';
+type DisplayClass = 'gameBoard' | 'stats';
 
 function switchOnDisplay(displayClass: DisplayClass) {
   const allDisplays = document.querySelectorAll('.displayContent');
@@ -205,12 +205,6 @@ function main() {
       switchOnDisplay('stats');
     });
   }
-  const optionsButton = document.getElementById('optionsBtn');
-  if (optionsButton) {
-    optionsButton.addEventListener('click', () => {
-      switchOnDisplay('options');
-    });
-  }
   const startButton = document.getElementById('playBtn');
   if (startButton) {
     startButton.addEventListener('click', () => {
@@ -220,7 +214,7 @@ function main() {
   }
 }
 
-type GameStatus = 'running' | 'fail' | 'win' | 'levelUp';
+type GameStatus = 'running' | 'gameOver' | 'win' | 'levelUp' | 'fail';
 
 /** Draw all the game's parts, do game condition checks. Return `true` if game is continuing after current draw. */
 function drawGame(snakeCtx: CanvasRenderingContext2D): GameStatus {
@@ -234,9 +228,10 @@ function drawGame(snakeCtx: CanvasRenderingContext2D): GameStatus {
     if (lives > 1) {
       lives--;
       snake = initialSnake.slice(0, initialSnake.length);
+      gameStatus = 'fail';
     } else {
       snakeCtx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
-      gameStatus = 'fail';
+      gameStatus = 'gameOver';
     }
   }
 
@@ -281,7 +276,7 @@ function playGame(snakeCtx: CanvasRenderingContext2D,
       lastSnakeDrawTimestamp = currentTimestamp;
     }
 
-    if (gameStatus === 'running' || gameStatus === 'levelUp') {
+    if (gameStatus === 'running' || gameStatus === 'levelUp' || gameStatus === 'fail') {
       requestAnimationFrame(snakeDrawingLoop);
     } else {
       clearInterval(particleBlinkingLoop);
@@ -290,6 +285,8 @@ function playGame(snakeCtx: CanvasRenderingContext2D,
 
   let lastTimeDrawTimestamp = performance.now();
   let lastTimeShowLevelUpMessage = performance.now();
+  let lastTimeShowFailMessage = performance.now();
+  let showFailMessage = false;
   let showLevelUpMessage = false;
   const textDrawingLoop = (currentTimestamp) => {
     timeElapsed = currentTimestamp - startGameTime;
@@ -302,8 +299,14 @@ function playGame(snakeCtx: CanvasRenderingContext2D,
     if (currentTimestamp - lastTimeShowLevelUpMessage > 500) {
       showLevelUpMessage = false;
     }
+    if (currentTimestamp - lastTimeShowFailMessage > 500) {
+      showFailMessage = false;
+    }
     if (showLevelUpMessage) {
       drawFinalText(textCtx, 'Next Level');
+    }
+    if (showFailMessage) {
+      drawFinalText(textCtx, 'Fail');
     }
     switch (gameStatus) {
       case 'levelUp':
@@ -311,10 +314,15 @@ function playGame(snakeCtx: CanvasRenderingContext2D,
         lastTimeShowLevelUpMessage = currentTimestamp;
         requestAnimationFrame(textDrawingLoop);
         break;
+      case 'fail':
+        showFailMessage = true;
+        lastTimeShowFailMessage = currentTimestamp;
+        requestAnimationFrame(textDrawingLoop);
+        break;
       case 'running':
         requestAnimationFrame(textDrawingLoop);
         break;
-      case 'fail':
+      case 'gameOver':
         textCtx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
         drawFinalText(textCtx, 'Game Over :(');
         break;
