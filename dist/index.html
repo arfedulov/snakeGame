@@ -9,25 +9,123 @@
     html {
       margin: 0;
       padding: 0;
+      font-family: "Press Start 2P", cursive;
+      --colorBase: rgb(100, 110, 100);
+      --colorActive: rgb(50, 50, 50);
+      --elBorder: 5px solid var(--colorBase);
+      --elBorderActive: 5px solid var(--colorActive);
+      --displaySize: 600px;
     }
+
     body {
       width: 100%;
       height: 100vh;
+      max-height: 100vh;
       margin: 0;
       padding: 0;
       display: flex;
-      justify-content: center;
-      align-items: center;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      position: relative;
+      top: 0;
+      left: 0;
     }
-    #board {
+
+    nav {
+      height: 80px;
+    }
+
+    main {
+      position: relative;
+      height: calc(100% - 80px);
+    }
+
+    .display {
+      width: var(--displaySize);
+      height: var(--displaySize);
       border: 5px solid black;
-      flex: 0 0 auto;
       box-sizing: content-box;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 0;
+    }
+
+    .control {
+      color: var(--colorBase);
+      border: var(--elBorder);
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .control:active {
+      border: var(--elBorderActive);
+      color: var(--colorActive);
+    }
+
+    button, button:focus {
+      background: none;
+      font-size: 1.2em;
+      outline: none;
+    }
+
+    #playBtn {
+      width: 300px;
+      height: 80px;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+    }
+
+    nav ul {
+      list-style-type: none;
+      padding: 0;
+      display: flex;
+      max-width: 1000px;
+      margin: 0 auto;
+      justify-content: center;
+    }
+
+    nav li {
+      margin: 10px;
+      padding: 5px 10px;
+      height: 40px;
+      font-size: 1.2em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stats {
+      list-style-type: none;
+      padding: 5px;
+      text-align: center;
+    }
+
+    .stats li {
+      margin: 5px 0;
     }
   </style>
+  <link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
 </head>
 <body>
-  <canvas id="board" width="600" height="600"></canvas>
+  <nav>
+    <ul>
+      <li class="control" id="startNewGameBtn">Start New Game</li>
+      <li class="control" id="statsBtn">Statistics</li>
+      <li class="control" id="optionsBtn">Options</li>
+    </ul>
+  </nav>
+  <main>
+      <button class="control displayContent gameBoard" type="button" id="playBtn">Play</button>
+      <canvas id="board" class="display displayContent gameBoard" width="600" height="600"></canvas>
+      <ul class="display displayContent stats" id="statsDisplay" hidden></ul>
+      <div class="display displayContent options" id="optionsDisplay" hidden>options</div>
+  </main>
   <script src="main.bundle.js"></script>
 </body>
 </html>
